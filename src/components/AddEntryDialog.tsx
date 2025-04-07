@@ -36,27 +36,36 @@ const AddEntryDialog: React.FC<AddEntryDialogProps> = ({ open, onOpenChange }) =
   const [status, setStatus] = useState('');
   const [keterangan, setKeterangan] = useState('');
   const [nomorPR, setNomorPR] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!jenisKerjaan || !department || !tanggalMulai || !pic || !status) {
       alert('Please fill all required fields');
       return;
     }
 
-    addLogEntry({
-      jenisKerjaan,
-      department,
-      tanggalMulai: format(tanggalMulai, 'yyyy-MM-dd'),
-      tanggalSelesai: tanggalSelesai ? format(tanggalSelesai, 'yyyy-MM-dd') : '',
-      pic,
-      status: status as "Completed" | "In Progress" | "Pending",
-      keterangan,
-      nomorPR
-    });
+    setIsSubmitting(true);
 
-    // Reset form and close dialog
-    resetForm();
-    onOpenChange(false);
+    try {
+      await addLogEntry({
+        jenisKerjaan,
+        department,
+        tanggalMulai: format(tanggalMulai, 'yyyy-MM-dd'),
+        tanggalSelesai: tanggalSelesai ? format(tanggalSelesai, 'yyyy-MM-dd') : '',
+        pic,
+        status: status as "Completed" | "In Progress" | "Pending",
+        keterangan,
+        nomorPR
+      });
+
+      // Reset form and close dialog
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error adding entry:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -217,10 +226,12 @@ const AddEntryDialog: React.FC<AddEntryDialogProps> = ({ open, onOpenChange }) =
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Submit</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Submit'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

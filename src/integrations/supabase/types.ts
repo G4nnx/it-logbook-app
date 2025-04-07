@@ -116,7 +116,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      shift_type: "Pagi" | "Siang" | "Sore"
+      status_type: "Completed" | "In Progress" | "Pending"
     }
     CompositeTypes: {
       [_ in never]: never

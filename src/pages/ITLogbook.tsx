@@ -16,12 +16,12 @@ import StatusBadge from '@/components/StatusBadge';
 import AddEntryDialog from '@/components/AddEntryDialog';
 import { useLogbook } from '@/context/LogbookContext';
 import { departments, statuses } from '@/data/mockData';
-import { CalendarIcon, Eye, Pencil, Search, Trash } from 'lucide-react';
+import { CalendarIcon, Eye, FileDown, Loader2, Pencil, Search, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const ITLogbook = () => {
-  const { logEntries, deleteLogEntry } = useLogbook();
+  const { logEntries, deleteLogEntry, loading, exportToExcel } = useLogbook();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
@@ -61,8 +61,11 @@ const ITLogbook = () => {
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this entry?')) {
       deleteLogEntry(id);
-      toast.success('Entry deleted successfully');
     }
+  };
+
+  const handleExport = () => {
+    exportToExcel();
   };
 
   return (
@@ -154,76 +157,88 @@ const ITLogbook = () => {
         <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap">
           Clear Filters
         </Button>
+
+        <Button onClick={handleExport} className="whitespace-nowrap ml-auto bg-green-600 hover:bg-green-700">
+          <FileDown className="h-4 w-4 mr-1" />
+          Export to Excel
+        </Button>
       </div>
       
       {/* Table */}
       <div className="overflow-x-auto rounded-md border">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium text-sm">No</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Tanggal Mulai</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Jenis Pekerjaan</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Department</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Tanggal Selesai</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">PIC</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Keterangan</th>
-              <th className="px-4 py-3 text-left font-medium text-sm">Nomor PR</th>
-              <th className="px-4 py-3 text-center font-medium text-sm">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEntries.length > 0 ? (
-              filteredEntries.map((entry, index) => (
-                <tr key={entry.id} className="border-t">
-                  <td className="px-4 py-3 text-sm">{index + 1}</td>
-                  <td className="px-4 py-3 text-sm">{format(parseISO(entry.tanggalMulai), 'yyyy-MM-dd')}</td>
-                  <td className="px-4 py-3 text-sm">{entry.jenisKerjaan}</td>
-                  <td className="px-4 py-3 text-sm">{entry.department}</td>
-                  <td className="px-4 py-3 text-sm">{entry.tanggalSelesai ? format(parseISO(entry.tanggalSelesai), 'yyyy-MM-dd') : '-'}</td>
-                  <td className="px-4 py-3 text-sm">{entry.pic}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <StatusBadge status={entry.status} />
-                  </td>
-                  <td className="px-4 py-3 text-sm max-w-[200px] truncate">{entry.keterangan}</td>
-                  <td className="px-4 py-3 text-sm">{entry.nomorPR}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex justify-center gap-2">
-                      <Button variant="ghost" size="icon" title="View">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" title="Edit">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="Delete"
-                        onClick={() => handleDelete(entry.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <span className="ml-2 text-gray-500">Loading data...</span>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="bg-muted/50">
+                <th className="px-4 py-3 text-left font-medium text-sm">No</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Tanggal Mulai</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Jenis Pekerjaan</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Department</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Tanggal Selesai</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">PIC</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Keterangan</th>
+                <th className="px-4 py-3 text-left font-medium text-sm">Nomor PR</th>
+                <th className="px-4 py-3 text-center font-medium text-sm">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEntries.length > 0 ? (
+                filteredEntries.map((entry, index) => (
+                  <tr key={entry.id} className="border-t">
+                    <td className="px-4 py-3 text-sm">{index + 1}</td>
+                    <td className="px-4 py-3 text-sm">{format(parseISO(entry.tanggalMulai), 'yyyy-MM-dd')}</td>
+                    <td className="px-4 py-3 text-sm">{entry.jenisKerjaan}</td>
+                    <td className="px-4 py-3 text-sm">{entry.department}</td>
+                    <td className="px-4 py-3 text-sm">{entry.tanggalSelesai ? format(parseISO(entry.tanggalSelesai), 'yyyy-MM-dd') : '-'}</td>
+                    <td className="px-4 py-3 text-sm">{entry.pic}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <StatusBadge status={entry.status} />
+                    </td>
+                    <td className="px-4 py-3 text-sm max-w-[200px] truncate">{entry.keterangan}</td>
+                    <td className="px-4 py-3 text-sm">{entry.nomorPR}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex justify-center gap-2">
+                        <Button variant="ghost" size="icon" title="View">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Delete"
+                          onClick={() => handleDelete(entry.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={10} className="px-4 py-6 text-center text-muted-foreground">
+                    No entries found
                   </td>
                 </tr>
-              ))
-            ) : (
+              )}
+            </tbody>
+            <tfoot>
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-muted-foreground">
-                  No entries found
+                <td colSpan={10} className="px-4 py-3 text-right text-sm font-medium">
+                  Total Entries: {filteredEntries.length}
                 </td>
               </tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={10} className="px-4 py-3 text-right text-sm font-medium">
-                Total Entries: {filteredEntries.length}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </tfoot>
+          </table>
+        )}
       </div>
       
       <AddEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} />
