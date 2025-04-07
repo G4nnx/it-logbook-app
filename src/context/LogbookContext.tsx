@@ -167,7 +167,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
           nomor_pr: updatedEntry.nomorPR || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', originalEntry.id);
+        .eq('id', originalEntry.id.toString());  // Convert number to string here
 
       if (error) {
         console.error('Error updating log entry:', error);
@@ -197,7 +197,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('logbook_entries')
         .delete()
-        .eq('id', entryToDelete.id);
+        .eq('id', entryToDelete.id.toString());  // Convert number to string here
 
       if (error) {
         console.error('Error deleting log entry:', error);
