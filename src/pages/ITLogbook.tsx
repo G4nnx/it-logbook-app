@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,11 +13,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format, parseISO } from 'date-fns';
 import StatusBadge from '@/components/StatusBadge';
 import AddEntryDialog from '@/components/AddEntryDialog';
+import EditEntryDialog from '@/components/EditEntryDialog';
+import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { useLogbook } from '@/context/LogbookContext';
 import { departments, statuses } from '@/data/mockData';
 import { CalendarIcon, Eye, FileDown, Loader2, Pencil, Search, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { LogEntry } from '@/types';
 
 const ITLogbook = () => {
   const { logEntries, deleteLogEntry, loading, exportToExcel } = useLogbook();
@@ -26,24 +28,22 @@ const ITLogbook = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<LogEntry | null>(null);
 
-  // Filter entries based on search term and filters
   const filteredEntries = logEntries.filter(entry => {
-    // Filter by search term (case insensitive)
     const matchesSearch = searchTerm === '' || 
       Object.values(entry).some(value => 
         typeof value === 'string' && 
         value.toLowerCase().includes(searchTerm.toLowerCase())
       );
     
-    // Filter by status
     const matchesStatus = selectedStatus === 'all' || entry.status === selectedStatus;
     
-    // Filter by department
     const matchesDepartment = selectedDepartment === 'all' || entry.department === selectedDepartment;
     
-    // Filter by date
     const matchesDate = !selectedDate || 
       entry.tanggalMulai === format(selectedDate, 'yyyy-MM-dd') || 
       entry.tanggalSelesai === format(selectedDate, 'yyyy-MM-dd');
@@ -58,9 +58,27 @@ const ITLogbook = () => {
     setSelectedDate(undefined);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this entry?')) {
-      deleteLogEntry(id);
+  const handleDeleteClick = (entry: LogEntry) => {
+    setSelectedEntry(entry);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (entry: LogEntry) => {
+    setSelectedEntry(entry);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedEntry) return;
+    
+    try {
+      await deleteLogEntry(selectedEntry.id);
+      toast.success('Entry deleted successfully');
+    } catch (error) {
+      console.error('Error during delete:', error);
+      toast.error('Failed to delete entry');
+    } finally {
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -84,13 +102,12 @@ const ITLogbook = () => {
               Backup DB Logs
             </a>
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setAddDialogOpen(true)}>
             Add New Entry
           </Button>
         </div>
       </div>
       
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-grow">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -164,7 +181,6 @@ const ITLogbook = () => {
         </Button>
       </div>
       
-      {/* Table */}
       <div className="overflow-x-auto rounded-md border">
         {loading ? (
           <div className="flex items-center justify-center py-10">
@@ -207,14 +223,19 @@ const ITLogbook = () => {
                         <Button variant="ghost" size="icon" title="View">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" title="Edit">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Edit"
+                          onClick={() => handleEditClick(entry)}
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           title="Delete"
-                          onClick={() => handleDelete(entry.id)}
+                          onClick={() => handleDeleteClick(entry)}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
@@ -241,7 +262,19 @@ const ITLogbook = () => {
         )}
       </div>
       
-      <AddEntryDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <AddEntryDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+      <EditEntryDialog 
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen} 
+        entry={selectedEntry} 
+      />
+      <DeleteConfirmDialog 
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Log Entry"
+        description="Are you sure you want to delete this log entry? This action cannot be undone."
+      />
     </div>
   );
 };

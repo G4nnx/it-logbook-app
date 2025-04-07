@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { BackupLog, LogEntry } from "@/types";
 import { logEntries as mockEntries, backupLogs as mockBackupLogs } from "@/data/mockData";
@@ -25,7 +24,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
   const [backupLogs, setBackupLogs] = useState<BackupLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch log entries from Supabase
   useEffect(() => {
     const fetchLogEntries = async () => {
       try {
@@ -37,11 +35,10 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         if (error) {
           console.error('Error fetching log entries:', error);
           toast.error('Failed to load log entries');
-          setLogEntries(mockEntries); // Fallback to mock data
+          setLogEntries(mockEntries);
         } else {
-          // Convert Supabase format to our app format
           const formattedEntries = data.map(entry => ({
-            id: parseInt(entry.id.toString().substring(0, 8), 16), // Convert UUID to numeric ID for compatibility
+            id: parseInt(entry.id.toString().substring(0, 8), 16),
             tanggalMulai: entry.tanggal_mulai,
             jenisKerjaan: entry.jenis_pekerjaan,
             department: entry.department,
@@ -55,7 +52,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.error('Unexpected error:', err);
-        setLogEntries(mockEntries); // Fallback to mock data
+        setLogEntries(mockEntries);
       } finally {
         setLoading(false);
       }
@@ -69,9 +66,8 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
         if (error) {
           console.error('Error fetching backup logs:', error);
-          setBackupLogs(mockBackupLogs); // Fallback to mock data
+          setBackupLogs(mockBackupLogs);
         } else {
-          // Convert Supabase format to our app format
           const formattedLogs = data.map(log => ({
             id: parseInt(log.id.toString().substring(0, 8), 16),
             tanggal: log.tanggal,
@@ -82,7 +78,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.error('Unexpected error:', err);
-        setBackupLogs(mockBackupLogs); // Fallback to mock data
+        setBackupLogs(mockBackupLogs);
       }
     };
 
@@ -105,7 +101,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
     try {
       console.log("Adding entry with status:", entry.status);
       
-      // Convert our app format to Supabase format
       const { data, error } = await supabase
         .from('logbook_entries')
         .insert({
@@ -126,7 +121,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Convert the returned data back to our app format
       const newEntry = {
         id: parseInt(data[0].id.toString().substring(0, 8), 16),
         tanggalMulai: data[0].tanggal_mulai,
@@ -149,7 +143,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
   const updateLogEntry = async (updatedEntry: LogEntry) => {
     try {
-      // Find the original entry in the database to get the UUID
       const originalEntry = logEntries.find(entry => entry.id === updatedEntry.id);
       if (!originalEntry) {
         toast.error('Entry not found');
@@ -169,7 +162,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
           nomor_pr: updatedEntry.nomorPR || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', originalEntry.id.toString());  // Convert number to string here
+        .eq('id', originalEntry.id.toString());
 
       if (error) {
         console.error('Error updating log entry:', error);
@@ -189,7 +182,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
   const deleteLogEntry = async (id: number) => {
     try {
-      // Find the original entry in the database to get the UUID
       const entryToDelete = logEntries.find(entry => entry.id === id);
       if (!entryToDelete) {
         toast.error('Entry not found');
@@ -199,7 +191,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('logbook_entries')
         .delete()
-        .eq('id', entryToDelete.id.toString());  // Convert number to string here
+        .eq('id', entryToDelete.id.toString());
 
       if (error) {
         console.error('Error deleting log entry:', error);
@@ -223,7 +215,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
           tanggal: log.tanggal,
           shift: log.shift,
           pic: log.pic,
-          timestamp: new Date().toISOString() // Add timestamp
+          timestamp: new Date().toISOString()
         })
         .select();
 
@@ -233,7 +225,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Convert the returned data back to our app format
       const newLog = {
         id: parseInt(data[0].id.toString().substring(0, 8), 16),
         tanggal: data[0].tanggal,
@@ -249,10 +240,8 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Function to export data to Excel
   const exportToExcel = () => {
     try {
-      // Format data for Excel
       const exportData = logEntries.map((entry, index) => ({
         'No': index + 1,
         'Tanggal Mulai': entry.tanggalMulai,
@@ -265,7 +254,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         'Nomor PR': entry.nomorPR || '-'
       }));
 
-      // Convert to CSV
       const headers = Object.keys(exportData[0]);
       const csvRows = [
         headers.join(','),
@@ -277,7 +265,6 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
       ];
       const csvString = csvRows.join('\n');
 
-      // Create a blob and download
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
