@@ -23,8 +23,8 @@ import { toast } from 'sonner';
 const ITLogbook = () => {
   const { logEntries, deleteLogEntry } = useLogbook();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -38,10 +38,10 @@ const ITLogbook = () => {
       );
     
     // Filter by status
-    const matchesStatus = selectedStatus === '' || entry.status === selectedStatus;
+    const matchesStatus = selectedStatus === 'all' || entry.status === selectedStatus;
     
     // Filter by department
-    const matchesDepartment = selectedDepartment === '' || entry.department === selectedDepartment;
+    const matchesDepartment = selectedDepartment === 'all' || entry.department === selectedDepartment;
     
     // Filter by date
     const matchesDate = !selectedDate || 
@@ -53,8 +53,8 @@ const ITLogbook = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedStatus('');
-    setSelectedDepartment('');
+    setSelectedStatus('all');
+    setSelectedDepartment('all');
     setSelectedDate(undefined);
   };
 
@@ -104,7 +104,7 @@ const ITLogbook = () => {
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             {statuses.map((status) => (
               <SelectItem key={status} value={status}>
                 {status}
@@ -118,7 +118,7 @@ const ITLogbook = () => {
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Departments</SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
             {departments.map((dept) => (
               <SelectItem key={dept} value={dept}>
                 {dept}
