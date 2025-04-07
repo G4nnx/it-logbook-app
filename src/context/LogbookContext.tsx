@@ -103,6 +103,8 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
   const addLogEntry = async (entry: Omit<LogEntry, "id">) => {
     try {
+      console.log("Adding entry with status:", entry.status);
+      
       // Convert our app format to Supabase format
       const { data, error } = await supabase
         .from('logbook_entries')

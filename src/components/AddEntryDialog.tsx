@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,6 +19,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
+import { Status } from '@/types';
 
 interface AddEntryDialogProps {
   open: boolean;
@@ -33,7 +33,7 @@ const AddEntryDialog: React.FC<AddEntryDialogProps> = ({ open, onOpenChange }) =
   const [tanggalMulai, setTanggalMulai] = useState<Date | undefined>(new Date());
   const [tanggalSelesai, setTanggalSelesai] = useState<Date | undefined>(new Date());
   const [pic, setPic] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<Status | ''>('');
   const [keterangan, setKeterangan] = useState('');
   const [nomorPR, setNomorPR] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +53,7 @@ const AddEntryDialog: React.FC<AddEntryDialogProps> = ({ open, onOpenChange }) =
         tanggalMulai: format(tanggalMulai, 'yyyy-MM-dd'),
         tanggalSelesai: tanggalSelesai ? format(tanggalSelesai, 'yyyy-MM-dd') : '',
         pic,
-        status: status as "Completed" | "In Progress" | "Pending",
+        status: status as Status,
         keterangan,
         nomorPR
       });
@@ -186,7 +186,7 @@ const AddEntryDialog: React.FC<AddEntryDialogProps> = ({ open, onOpenChange }) =
 
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(value) => setStatus(value as Status)}>
               <SelectTrigger id="status">
                 <SelectValue placeholder="Select a status" />
               </SelectTrigger>
