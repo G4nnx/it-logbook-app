@@ -21,7 +21,14 @@ const RecentBackupLogs = () => {
                   <span>{format(parseISO(log.tanggal), 'dd MMM yyyy')}</span>
                   <span>{log.shift}</span>
                 </div>
-                <div className="text-gray-600">PIC: {log.pic}</div>
+                <div className="flex justify-between text-gray-600">
+                  <span>PIC: {log.pic}</span>
+                  {log.timestamp && (
+                    <span className="text-xs text-gray-500">
+                      {format(parseISO(log.timestamp), 'HH:mm:ss')}
+                    </span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

@@ -209,20 +209,22 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
   const addBackupLog = async (log: Omit<BackupLog, "id">) => {
     try {
+      const currentTimestamp = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('backup_logs')
         .insert({
           tanggal: log.tanggal,
           shift: log.shift,
           pic: log.pic,
-          timestamp: new Date().toISOString()
+          timestamp: currentTimestamp
         })
         .select();
 
       if (error) {
         console.error('Error adding backup log:', error);
         toast.error('Failed to save backup log');
-        return;
+        throw error;
       }
 
       const newLog = {
@@ -237,6 +239,7 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Unexpected error:', err);
       toast.error('An unexpected error occurred');
+      throw err;
     }
   };
 

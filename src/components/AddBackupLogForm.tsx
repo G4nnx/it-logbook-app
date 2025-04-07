@@ -11,6 +11,7 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogbook } from '@/context/LogbookContext';
+import { toast } from 'sonner';
 
 const AddBackupLogForm = () => {
   const [tanggal, setTanggal] = useState<Date | undefined>(new Date());
@@ -18,22 +19,28 @@ const AddBackupLogForm = () => {
   const [pic, setPic] = useState("");
   const { addBackupLog } = useLogbook();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!tanggal || !shift || !pic) {
-      alert("Please fill all fields");
+      toast.error("Please fill all fields");
       return;
     }
     
-    addBackupLog({
-      tanggal: format(tanggal, 'yyyy-MM-dd'),
-      shift,
-      pic
-    });
-    
-    // Reset form
-    setPic("");
+    try {
+      await addBackupLog({
+        tanggal: format(tanggal, 'yyyy-MM-dd'),
+        shift,
+        pic
+      });
+      
+      // Reset form
+      setPic("");
+      toast.success("Backup log saved successfully");
+    } catch (error) {
+      console.error("Error saving backup log:", error);
+      toast.error("Failed to save backup log");
+    }
   };
 
   return (
