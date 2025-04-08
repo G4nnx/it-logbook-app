@@ -1,21 +1,24 @@
-
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, Settings } from 'lucide-react';
-import Logo from './Logo';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { useLogbook } from '@/context/LogbookContext';
-import { useNavigate } from 'react-router-dom';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Bell, Settings } from "lucide-react";
+import Logo from "./Logo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLogbook } from "@/context/LogbookContext";
+import { useNavigate } from "react-router-dom";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 
 // Notification type definition
 interface Notification {
@@ -23,7 +26,7 @@ interface Notification {
   title: string;
   description: string;
   timestamp: string;
-  type: 'logbook' | 'backup';
+  type: "logbook" | "backup";
   read: boolean;
 }
 
@@ -32,42 +35,72 @@ const Header = () => {
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const unreadCount = notifications.filter(notification => !notification.read).length;
+  const unreadCount = notifications.filter(
+    (notification) => !notification.read,
+  ).length;
+
+  // Load read notification IDs from localStorage
+  const loadReadNotifications = () => {
+    try {
+      const savedReadNotifications = localStorage.getItem("readNotifications");
+      return savedReadNotifications ? JSON.parse(savedReadNotifications) : [];
+    } catch (error) {
+      console.error(
+        "Error loading read notifications from localStorage:",
+        error,
+      );
+      return [];
+    }
+  };
+
+  // Save read notification IDs to localStorage
+  const saveReadNotifications = (readIds: string[]) => {
+    try {
+      localStorage.setItem("readNotifications", JSON.stringify(readIds));
+    } catch (error) {
+      console.error("Error saving read notifications to localStorage:", error);
+    }
+  };
 
   // Convert log entries to notifications
   useEffect(() => {
-    const recentLogEntries = logEntries
-      .slice(0, 3)
-      .map(entry => ({
-        id: `log-${entry.id}`,
-        title: `New IT Logbook Entry: ${entry.jenisKerjaan}`,
-        description: `${entry.department} - ${entry.status}`,
-        timestamp: new Date(entry.tanggalMulai).toLocaleDateString(),
-        type: 'logbook' as const,
-        read: false
-      }));
+    const readNotificationIds = loadReadNotifications();
 
-    const recentBackupLogs = backupLogs
-      .slice(0, 3)
-      .map(log => ({
-        id: `backup-${log.id}`,
-        title: `New Backup Log`,
-        description: `Shift: ${log.shift} - PIC: ${log.pic}`,
-        timestamp: new Date(log.tanggal).toLocaleDateString(),
-        type: 'backup' as const,
-        read: false
-      }));
+    const recentLogEntries = logEntries.slice(0, 3).map((entry) => ({
+      id: `log-${entry.id}`,
+      title: `New IT Logbook Entry: ${entry.jenisKerjaan}`,
+      description: `${entry.department} - ${entry.status}`,
+      timestamp: new Date(entry.tanggalMulai).toLocaleDateString(),
+      type: "logbook" as const,
+      read: readNotificationIds.includes(`log-${entry.id}`),
+    }));
+
+    const recentBackupLogs = backupLogs.slice(0, 3).map((log) => ({
+      id: `backup-${log.id}`,
+      title: `New Backup Log`,
+      description: `Shift: ${log.shift} - PIC: ${log.pic}`,
+      timestamp: new Date(log.tanggal).toLocaleDateString(),
+      type: "backup" as const,
+      read: readNotificationIds.includes(`backup-${log.id}`),
+    }));
 
     // Combine and sort by most recent first
     const combinedNotifications = [...recentLogEntries, ...recentBackupLogs]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      )
       .slice(0, 5);
-    
+
     // Preserve read status for existing notifications
-    setNotifications(prevNotifications => {
-      const updatedNotifications = combinedNotifications.map(newNotif => {
-        const existingNotif = prevNotifications.find(prev => prev.id === newNotif.id);
-        return existingNotif ? { ...newNotif, read: existingNotif.read } : newNotif;
+    setNotifications((prevNotifications) => {
+      const updatedNotifications = combinedNotifications.map((newNotif) => {
+        const existingNotif = prevNotifications.find(
+          (prev) => prev.id === newNotif.id,
+        );
+        return existingNotif
+          ? { ...newNotif, read: existingNotif.read }
+          : newNotif;
       });
       return updatedNotifications;
     });
@@ -75,20 +108,41 @@ const Header = () => {
 
   // Mark notification as read and navigate
   const handleNotificationClick = (notification: Notification) => {
-    setNotifications(prevNotifications => 
-      prevNotifications.map(notif => 
-        notif.id === notification.id ? { ...notif, read: true } : notif
-      )
-    );
+    // Update state
+    setNotifications((prevNotifications) => {
+      const updatedNotifications = prevNotifications.map((notif) =>
+        notif.id === notification.id ? { ...notif, read: true } : notif,
+      );
+
+      // Update localStorage
+      const readIds = loadReadNotifications();
+      if (!readIds.includes(notification.id)) {
+        const newReadIds = [...readIds, notification.id];
+        saveReadNotifications(newReadIds);
+      }
+
+      return updatedNotifications;
+    });
+
     setIsNotificationsOpen(false);
-    navigate(notification.type === 'backup' ? '/backup-logs' : '/');
+    navigate(notification.type === "backup" ? "/backup-logs" : "/");
   };
 
   // Mark all notifications as read
   const markAllAsRead = () => {
-    setNotifications(prevNotifications => 
-      prevNotifications.map(notif => ({ ...notif, read: true }))
-    );
+    setNotifications((prevNotifications) => {
+      const updatedNotifications = prevNotifications.map((notif) => ({
+        ...notif,
+        read: true,
+      }));
+
+      // Update localStorage with all notification IDs
+      const allIds = updatedNotifications.map((notif) => notif.id);
+      saveReadNotifications(allIds);
+
+      return updatedNotifications;
+    });
+
     setIsNotificationsOpen(false);
   };
 
@@ -98,9 +152,12 @@ const Header = () => {
         <Link to="/">
           <Logo />
         </Link>
-        
+
         <div className="flex items-center gap-4">
-          <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+          <Popover
+            open={isNotificationsOpen}
+            onOpenChange={setIsNotificationsOpen}
+          >
             <PopoverTrigger asChild>
               <div className="relative cursor-pointer">
                 <Bell className="h-5 w-5 text-gray-600" />
@@ -115,7 +172,7 @@ const Header = () => {
               <div className="bg-blue-50 p-3 border-b border-blue-100 flex justify-between items-center">
                 <h3 className="font-medium text-blue-800">Notifications</h3>
                 {unreadCount > 0 && (
-                  <button 
+                  <button
                     className="text-xs text-blue-600 hover:text-blue-800"
                     onClick={markAllAsRead}
                   >
@@ -126,34 +183,44 @@ const Header = () => {
               <div className="max-h-[300px] overflow-y-auto">
                 {notifications.length > 0 ? (
                   notifications.map((notification) => (
-                    <div 
-                      key={notification.id} 
-                      className={`border-b border-gray-100 p-3 hover:bg-gray-50 cursor-pointer ${notification.read ? 'bg-gray-50' : ''}`}
+                    <div
+                      key={notification.id}
+                      className={`border-b border-gray-100 p-3 hover:bg-gray-50 cursor-pointer ${notification.read ? "bg-gray-50" : ""}`}
                       onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex justify-between">
-                        <p className={`font-medium text-sm ${notification.read ? 'text-gray-500' : ''}`}>
+                        <p
+                          className={`font-medium text-sm ${notification.read ? "text-gray-500" : ""}`}
+                        >
                           {notification.title}
                           {!notification.read && (
                             <span className="ml-2">
-                              <Badge variant="success" className="text-xs">New</Badge>
+                              <Badge variant="success" className="text-xs">
+                                New
+                              </Badge>
                             </span>
                           )}
                         </p>
                         <Badge variant="outline" className="text-xs">
-                          {notification.type === 'backup' ? 'Backup' : 'IT Log'}
+                          {notification.type === "backup" ? "Backup" : "IT Log"}
                         </Badge>
                       </div>
-                      <p className="text-gray-600 text-xs mt-1">{notification.description}</p>
-                      <p className="text-gray-400 text-xs mt-1">{notification.timestamp}</p>
+                      <p className="text-gray-600 text-xs mt-1">
+                        {notification.description}
+                      </p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {notification.timestamp}
+                      </p>
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-gray-500">No new notifications</div>
+                  <div className="p-4 text-center text-gray-500">
+                    No new notifications
+                  </div>
                 )}
               </div>
               <div className="p-2 border-t border-gray-100 bg-gray-50">
-                <button 
+                <button
                   className="w-full text-center text-xs text-blue-600 hover:text-blue-800"
                   onClick={() => setIsNotificationsOpen(false)}
                 >
@@ -172,23 +239,23 @@ const Header = () => {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Settings</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/department-settings')}>
+              <DropdownMenuItem
+                onClick={() => navigate("/department-settings")}
+              >
                 Department Management
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                App Preferences
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                User Profile
-              </DropdownMenuItem>
+              <DropdownMenuItem>App Preferences</DropdownMenuItem>
+              <DropdownMenuItem>User Profile</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <div className="flex items-center gap-2">
             <Avatar>
               <AvatarImage src="public/lovable-uploads/7f4d106e-d4db-45d3-85a2-0a0bf79054da.png" />
-              <AvatarFallback className="bg-blue-100 text-blue-800">AU</AvatarFallback>
+              <AvatarFallback className="bg-blue-100 text-blue-800">
+                AU
+              </AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium">Admin User</span>
           </div>

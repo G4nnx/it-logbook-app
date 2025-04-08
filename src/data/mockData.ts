@@ -1,4 +1,3 @@
-
 import { BackupLog, LogEntry } from "@/types";
 
 export const logEntries: LogEntry[] = [
@@ -11,7 +10,7 @@ export const logEntries: LogEntry[] = [
     pic: "John Doe",
     status: "Completed",
     keterangan: "Replaced faulty router in server room",
-    nomorPR: "PR-2023-001"
+    nomorPR: "PR-2023-001",
   },
   {
     id: 2,
@@ -22,7 +21,7 @@ export const logEntries: LogEntry[] = [
     pic: "Jane Smith",
     status: "In Progress",
     keterangan: "Installing accounting software on 5 workstations",
-    nomorPR: "PR-2023-002"
+    nomorPR: "PR-2023-002",
   },
   {
     id: 3,
@@ -33,22 +32,15 @@ export const logEntries: LogEntry[] = [
     pic: "Mike Johnson",
     status: "Pending",
     keterangan: "Replace 3 monitors with new LED displays",
-    nomorPR: "PR-2023-003"
-  }
+    nomorPR: "PR-2023-003",
+  },
 ];
 
 export const backupLogs: BackupLog[] = [];
 
-export const departments: string[] = [
-  "IT Infrastructure",
-  "Finance",
-  "HR",
-  "Marketing",
-  "Sales",
-  "Operations",
-  "Executive",
-  "Development",
-  "QA"
-];
+import { getDepartments } from "@/services/departmentService";
+
+// Get departments from localStorage or use defaults
+export const departments: string[] = getDepartments();
 
 export const statuses: string[] = ["Completed", "In Progress", "Pending"];
