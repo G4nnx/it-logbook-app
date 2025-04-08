@@ -1,5 +1,6 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { BackupLog, LogEntry } from "@/types";
+import { BackupLog, LogEntry, Shift } from "@/types";
 import { logEntries as mockEntries, backupLogs as mockBackupLogs } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -211,6 +212,8 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
     try {
       const currentTimestamp = new Date().toISOString();
       
+      console.log("Sending backup log with shift:", log.shift);
+      
       const { data, error } = await supabase
         .from('backup_logs')
         .insert({
@@ -230,8 +233,9 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
       const newLog = {
         id: parseInt(data[0].id.toString().substring(0, 8), 16),
         tanggal: data[0].tanggal,
-        shift: data[0].shift as "Pagi" | "Siang" | "Sore",
-        pic: data[0].pic
+        shift: data[0].shift as Shift,
+        pic: data[0].pic,
+        timestamp: data[0].timestamp
       };
 
       setBackupLogs([...backupLogs, newLog]);

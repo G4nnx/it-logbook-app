@@ -24,6 +24,7 @@ export type Department =
 
 export type Status = "Completed" | "In Progress" | "Pending";
 
+// Update shift type to match database's enum
 export type Shift = "Pagi" | "Siang" | "Sore";
 
 export interface BackupLog {

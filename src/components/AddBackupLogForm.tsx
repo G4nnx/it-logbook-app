@@ -12,10 +12,11 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogbook } from '@/context/LogbookContext';
 import { toast } from 'sonner';
+import { Shift } from '@/types';
 
 const AddBackupLogForm = () => {
   const [tanggal, setTanggal] = useState<Date | undefined>(new Date());
-  const [shift, setShift] = useState<"Pagi" | "Siang" | "Sore">("Pagi");
+  const [shift, setShift] = useState<Shift>("Pagi");
   const [pic, setPic] = useState("");
   const { addBackupLog } = useLogbook();
 
@@ -80,7 +81,7 @@ const AddBackupLogForm = () => {
           
           <div className="space-y-2">
             <Label>Shift</Label>
-            <RadioGroup value={shift} onValueChange={(value: "Pagi" | "Siang" | "Sore") => setShift(value)}>
+            <RadioGroup value={shift} onValueChange={(value: Shift) => setShift(value)}>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="Pagi" id="pagi" />
