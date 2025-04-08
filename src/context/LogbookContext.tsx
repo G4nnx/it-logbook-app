@@ -210,9 +210,16 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
 
   const addBackupLog = async (log: Omit<BackupLog, "id">) => {
     try {
-      const currentTimestamp = new Date().toISOString();
+      // Make sure timestamp is included
+      const timestamp = log.timestamp || new Date().toISOString();
       
       console.log("Sending backup log with shift:", log.shift);
+      console.log("Full log data being sent:", JSON.stringify({
+        tanggal: log.tanggal,
+        shift: log.shift,
+        pic: log.pic,
+        timestamp
+      }));
       
       const { data, error } = await supabase
         .from('backup_logs')
@@ -220,14 +227,20 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
           tanggal: log.tanggal,
           shift: log.shift,
           pic: log.pic,
-          timestamp: currentTimestamp
+          timestamp
         })
         .select();
 
       if (error) {
         console.error('Error adding backup log:', error);
-        toast.error('Failed to save backup log');
+        toast.error('Failed to save backup log: ' + error.message);
         throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No data returned after insert');
+        toast.error('Failed to save backup log: No data returned');
+        throw new Error('No data returned after insert');
       }
 
       const newLog = {
@@ -238,11 +251,11 @@ export function LogbookProvider({ children }: { children: ReactNode }) {
         timestamp: data[0].timestamp
       };
 
+      console.log("Successfully created backup log:", newLog);
       setBackupLogs([...backupLogs, newLog]);
-      toast.success('Backup log saved successfully');
     } catch (err) {
       console.error('Unexpected error:', err);
-      toast.error('An unexpected error occurred');
+      toast.error('An unexpected error occurred: ' + (err instanceof Error ? err.message : String(err)));
       throw err;
     }
   };

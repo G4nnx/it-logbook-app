@@ -32,5 +32,5 @@ export interface BackupLog {
   tanggal: string;
   shift: Shift;
   pic: string;
-  timestamp?: string;
+  timestamp: string;
 }

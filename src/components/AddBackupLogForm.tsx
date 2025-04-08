@@ -29,10 +29,13 @@ const AddBackupLogForm = () => {
     }
     
     try {
+      console.log("Submitting backup log with shift:", shift);
+      
       await addBackupLog({
         tanggal: format(tanggal, 'yyyy-MM-dd'),
         shift,
-        pic
+        pic,
+        timestamp: new Date().toISOString() // Add current timestamp
       });
       
       // Reset form
