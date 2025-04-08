@@ -8,6 +8,7 @@ import { LogbookProvider } from "@/context/LogbookContext";
 import Header from "@/components/Header";
 import ITLogbook from "@/pages/ITLogbook";
 import BackupLogs from "@/pages/BackupLogs";
+import DepartmentSettings from "@/pages/DepartmentSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<ITLogbook />} />
                 <Route path="/backup-logs" element={<BackupLogs />} />
+                <Route path="/department-settings" element={<DepartmentSettings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
